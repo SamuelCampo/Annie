@@ -1,0 +1,920 @@
+package cw.kawa;
+
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.content.FileProvider;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+import java.io.File;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+
+import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK;
+
+
+@SuppressWarnings("all")
+public class Finpecc extends AppCompatActivity {
+
+    public boolean finform;
+    Foto ifoto = new Foto();
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    public TextView tvevid;
+    private Inspeccion oFmtoInsp;
+    private String obs = "", obsLabel = "";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_finpecc);
+
+        /**try {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }**/
+
+        TextView itvtit = (TextView) findViewById(R.id.tvTitulo);
+        TextView itvplaca = (TextView) findViewById(R.id.tvPlacasel);
+        TextView itvref2 = (TextView) findViewById(R.id.tvRef2);
+        TextView itvref2reg = (TextView) findViewById(R.id.tvRef2reg);
+        TextView teObs = (TextView) findViewById(R.id.tvRefObs);
+        final Vehiculo oVehic = new Vehiculo(getApplicationContext());
+        Config oConfig = new Config(getApplicationContext());
+
+        Intent intent=getIntent();
+        Bundle extras =intent.getExtras();
+        Log.i("Extras Finspecc","Valor "+extras+" --");
+        if (extras != null) {//ver si contiene datos
+            final Calendar fecha = new GregorianCalendar();
+            String sFechaini = String.valueOf(fecha.get(Calendar.YEAR))+"-"+String.valueOf(fecha.get(Calendar.MONTH)+1)+"-"+String.valueOf(fecha.get(Calendar.DAY_OF_MONTH))+" "+String.valueOf(fecha.get(Calendar.HOUR_OF_DAY))+":"+String.valueOf(fecha.get(Calendar.MINUTE));;
+            Log.i("Fecha Inicio","Valor "+sFechaini+" --");
+            String sIdusuario = (String) extras.get("idusuario");
+            String svehsel=(String)extras.get("svehsel");//Obtengo el nombre
+            String idform = (String)extras.get("idform"); // Obtengo el nombre de el formato
+            switch (idform){
+                case "INSPECCION BASICA DE SEGURIDAD":
+                    idform = "4";
+                    break;
+                case "PREOPERATIVA DE VEHICULO":
+                    idform = "1";
+                    break;
+                case "EQUIPO DE MANTENIMIENTO":
+                    idform = "5";
+                    break;
+                case "INSPECCION EPP":
+                    idform = "2";
+                    break;
+            }
+            String sref2reg= (String) extras.get("sref2reg");//Obtengo la edad
+            itvplaca.setText(svehsel);
+            oVehic.vehicsel  = oVehic.dom.getElementById(svehsel);
+            itvref2.setText(oVehic.vehicsel.getAttribute("ref2"));
+
+            obs = extras.getString("obs");
+            obsLabel = extras.getString("obsLabel");
+            assert obs != null;
+            String aux = (obs.isEmpty()) ? "Sin Observaciones":obs;
+
+            teObs.setText(obsLabel+": "+ aux);
+            itvtit.setText("Insp Pre-Operacional "+oVehic.vehicsel.getAttribute("clasea"));
+            itvref2reg.setText(sref2reg);
+            oFmtoInsp = new Inspeccion(getApplicationContext(),idform,sIdusuario,sFechaini);
+            oFmtoInsp.Vehic = oVehic;
+            finform = false;
+            cargaitems(oFmtoInsp);
+            Button btnContinuar = (Button) findViewById(R.id.btEnviar);
+            btnContinuar.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    guardaitems(oFmtoInsp,"SIG");
+                }
+            });
+
+            Button btnAnt = (Button) findViewById(R.id.btAnt);
+            btnAnt.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    guardaitems(oFmtoInsp,"ATRAS");
+                }
+            });
+
+            ImageButton btnayd;
+            btnayd = (ImageButton) findViewById(R.id.ib_item_0);
+            btnayd.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Hashtable<String, String> htAyuda;
+                    htAyuda = oFmtoInsp.retayuda(oFmtoInsp.iditemsfmto[oFmtoInsp.iditemsep[0]]);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    DialogoAyuda dialogo = new DialogoAyuda();
+                    dialogo.sAydDesc = oFmtoInsp.itemsfmto[oFmtoInsp.iditemsep[0]];
+                    dialogo.sActDesc = htAyuda.get("activ").toString();
+                    /*
+        try {
+            a
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        String sActDesc2 = new String(arrByteForSpanish);
+                    byte[] arrByteForSpanish = new byte[0];
+                    try {
+                        arrByteForSpanish = htAyuda.get("activ").getBytes("ISO-8859-1");
+                        String sActDesc2 = new String(arrByteForSpanish);
+                        Log.i("ActivoAyuda",sActDesc2);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }*/
+                    dialogo.sConfDesc = htAyuda.get("conf").toString();
+                    dialogo.sNoConfDesc = htAyuda.get("noconf").toString();
+                    dialogo.sConfPDesc = htAyuda.get("confp").toString();
+                    dialogo.show(fragmentManager, "tagAyuda");
+                }
+            });
+
+            btnayd = (ImageButton) findViewById(R.id.ib_item_1);
+            btnayd.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Hashtable<String, String> htAyuda;
+                    htAyuda = oFmtoInsp.retayuda(oFmtoInsp.iditemsfmto[oFmtoInsp.iditemsep[1]]);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    DialogoAyuda dialogo = new DialogoAyuda();
+                    dialogo.sAydDesc = oFmtoInsp.itemsfmto[oFmtoInsp.iditemsep[1]];
+                    dialogo.sActDesc = htAyuda.get("activ").toString();
+                    dialogo.sConfDesc = htAyuda.get("conf").toString();
+                    dialogo.sNoConfDesc = htAyuda.get("noconf").toString();
+                    dialogo.sConfPDesc = htAyuda.get("confp").toString();
+                    dialogo.show(fragmentManager, "tagAyuda");
+                }
+            });
+
+            btnayd = (ImageButton) findViewById(R.id.ib_item_2);
+            btnayd.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Hashtable<String, String> htAyuda;
+                    htAyuda = oFmtoInsp.retayuda(oFmtoInsp.iditemsfmto[oFmtoInsp.iditemsep[2]]);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    DialogoAyuda dialogo = new DialogoAyuda();
+                    dialogo.sAydDesc = oFmtoInsp.itemsfmto[oFmtoInsp.iditemsep[2]];
+                    dialogo.sActDesc = htAyuda.get("activ").toString();
+                    dialogo.sConfDesc = htAyuda.get("conf").toString();
+                    dialogo.sNoConfDesc = htAyuda.get("noconf").toString();
+                    dialogo.sConfPDesc = htAyuda.get("confp").toString();
+                    dialogo.show(fragmentManager, "tagAyuda");
+                }
+            });
+
+            btnayd = (ImageButton) findViewById(R.id.ib_item_3);
+            btnayd.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Hashtable<String, String> htAyuda;
+                    htAyuda = oFmtoInsp.retayuda(oFmtoInsp.iditemsfmto[oFmtoInsp.iditemsep[3]]);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    DialogoAyuda dialogo = new DialogoAyuda();
+                    dialogo.sAydDesc = oFmtoInsp.itemsfmto[oFmtoInsp.iditemsep[3]];
+                    dialogo.sActDesc = htAyuda.get("activ").toString();
+                    dialogo.sConfDesc = htAyuda.get("conf").toString();
+                    dialogo.sNoConfDesc = htAyuda.get("noconf").toString();
+                    dialogo.sConfPDesc = htAyuda.get("confp").toString();
+                    dialogo.show(fragmentManager, "tagAyuda");
+                }
+            });
+
+            btnayd = (ImageButton) findViewById(R.id.ib_item_4);
+            btnayd.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Hashtable<String, String> htAyuda;
+                    htAyuda = oFmtoInsp.retayuda(oFmtoInsp.iditemsfmto[oFmtoInsp.iditemsep[4]]);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    DialogoAyuda dialogo = new DialogoAyuda();
+                    dialogo.sAydDesc = oFmtoInsp.itemsfmto[oFmtoInsp.iditemsep[4]];
+                    dialogo.sActDesc = htAyuda.get("activ").toString();
+                    dialogo.sConfDesc = htAyuda.get("conf").toString();
+                    dialogo.sNoConfDesc = htAyuda.get("noconf").toString();
+                    dialogo.sConfPDesc = htAyuda.get("confp").toString();
+                    dialogo.show(fragmentManager, "tagAyuda");
+                }
+            });
+
+            ImageButton btnEvid = (ImageButton) findViewById(R.id.ib_evid_0);
+            btnEvid.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Calendar fecha = new GregorianCalendar();
+                    ifoto.nomfoto = fecha.getTimeInMillis() + ".jpg";
+                    String rutafoto = ifoto.rutafotos + ifoto.nomfoto;
+                    File fotoevd = new File( rutafoto );
+                    try {
+                        fotoevd.createNewFile();
+                    } catch (IOException ex) {
+                        Log.e("ERROR ", "Error:" + ex);
+                    }
+                    //
+                    Uri uri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        uri = FileProvider.getUriForFile(
+                                Finpecc.this,
+                                getApplicationContext().getPackageName() + ".fileprovider",
+                                fotoevd);
+                    } else {
+                        uri = Uri.fromFile(fotoevd);
+                    }
+                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                    tvevid = (TextView) findViewById(R.id.tv_evid_0);
+                    startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            });
+
+            btnEvid = (ImageButton) findViewById(R.id.ib_evid_1);
+            btnEvid.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Calendar fecha = new GregorianCalendar();
+                    ifoto.nomfoto = fecha.getTimeInMillis() + ".jpg";
+                    String rutafoto = ifoto.rutafotos + ifoto.nomfoto;
+                    File fotoevd = new File( rutafoto );
+                    try {
+                        fotoevd.createNewFile();
+                    } catch (IOException ex) {
+                        Log.e("ERROR ", "Error:" + ex);
+                    }
+                    //
+                    Uri uri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        uri = FileProvider.getUriForFile(
+                                Finpecc.this,
+                                getApplicationContext().getPackageName() + ".fileprovider",
+                                fotoevd);
+                    } else {
+                        uri = Uri.fromFile(fotoevd);
+                    }
+                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                    tvevid = (TextView) findViewById(R.id.tv_evid_1);
+                    startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            });
+
+            btnEvid = (ImageButton) findViewById(R.id.ib_evid_2);
+            btnEvid.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Calendar fecha = new GregorianCalendar();
+                    ifoto.nomfoto = fecha.getTimeInMillis() + ".jpg";
+                    String rutafoto = ifoto.rutafotos + ifoto.nomfoto;
+                    File fotoevd = new File( rutafoto );
+                    try {
+                        fotoevd.createNewFile();
+                    } catch (IOException ex) {
+                        Log.e("ERROR ", "Error:" + ex);
+                    }
+                    //
+                    Uri uri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        uri = FileProvider.getUriForFile(
+                                Finpecc.this,
+                                getApplicationContext().getPackageName() + ".fileprovider",
+                                fotoevd);
+                    } else {
+                        uri = Uri.fromFile(fotoevd);
+                    }
+                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                    tvevid = (TextView) findViewById(R.id.tv_evid_2);
+                    startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            });
+
+            btnEvid = (ImageButton) findViewById(R.id.ib_evid_3);
+            btnEvid.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Calendar fecha = new GregorianCalendar();
+                    ifoto.nomfoto = fecha.getTimeInMillis() + ".jpg";
+                    String rutafoto = ifoto.rutafotos + ifoto.nomfoto;
+                    File fotoevd = new File( rutafoto );
+                    try {
+                        fotoevd.createNewFile();
+                    } catch (IOException ex) {
+                        Log.e("ERROR ", "Error:" + ex);
+                    }
+                    //
+                    Uri uri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        uri = FileProvider.getUriForFile(
+                                Finpecc.this,
+                                getApplicationContext().getPackageName() + ".fileprovider",
+                                fotoevd);
+                    } else {
+                        uri = Uri.fromFile(fotoevd);
+                    }
+                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                    tvevid = (TextView) findViewById(R.id.tv_evid_3);
+                    startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            });
+
+            btnEvid = (ImageButton) findViewById(R.id.ib_evid_4);
+            btnEvid.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    Calendar fecha = new GregorianCalendar();
+                    ifoto.nomfoto = fecha.getTimeInMillis() + ".jpg";
+                    String rutafoto = ifoto.rutafotos + ifoto.nomfoto;
+                    File fotoevd = new File( rutafoto );
+                    try {
+                        fotoevd.createNewFile();
+                    } catch (IOException ex) {
+                        Log.e("ERROR ", "Error:" + ex);
+                    }
+                    //
+                    Uri uri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        uri = FileProvider.getUriForFile(
+                                Finpecc.this,
+                                getApplicationContext().getPackageName() + ".fileprovider",
+                                fotoevd);
+                    } else {
+                        uri = Uri.fromFile(fotoevd);
+                    }
+                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                    tvevid = (TextView) findViewById(R.id.tv_evid_4);
+                    startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d("Back", "onBackPress");
+    }
+
+    /**@Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return super.onSupportNavigateUp();
+    }**/
+
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //Comprovamos que la foto se a realizado
+        if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == -1){
+            tvevid.setText(ifoto.nomfoto);
+        }
+    }
+
+    public void limpiaform(){
+        TextView itv;
+        RadioGroup irdg;
+        RadioButton irb;
+        itv = (TextView) findViewById(R.id.tvItem_0);
+        itv.setVisibility(View.INVISIBLE);
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_0);
+        irdg.setOnCheckedChangeListener(null);
+        irdg.clearCheck();
+        irdg.setVisibility(View.INVISIBLE);
+        irb = (RadioButton) findViewById(R.id.rd_item_0_c);
+        irb.setChecked(false);
+        irb = (RadioButton) findViewById(R.id.rd_item_0_nc);
+        irb.setChecked(false);
+        /*irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
+        irb.setChecked(false);*/
+        itv = (TextView) findViewById(R.id.tv_evid_0);
+        itv.setText("");
+
+
+        itv = (TextView) findViewById(R.id.tvItem_1);
+        itv.setVisibility(View.INVISIBLE);
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_1);
+        irdg.setOnCheckedChangeListener(null);
+        irdg.clearCheck();
+        irdg.setVisibility(View.INVISIBLE);
+        irb = (RadioButton) findViewById(R.id.rd_item_1_c);
+        irb.setChecked(false);
+        irb = (RadioButton) findViewById(R.id.rd_item_1_nc);
+        irb.setChecked(false);
+        /*irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
+        irb.setChecked(false);*/
+        itv = (TextView) findViewById(R.id.tv_evid_1);
+        itv.setText("");
+
+
+        itv = (TextView) findViewById(R.id.tvItem_2);
+        itv.setVisibility(View.INVISIBLE);
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_2);
+        irdg.setOnCheckedChangeListener(null);
+        irdg.clearCheck();
+        irdg.setVisibility(View.INVISIBLE);
+        irb = (RadioButton) findViewById(R.id.rd_item_2_c);
+        irb.setChecked(false);
+        irb = (RadioButton) findViewById(R.id.rd_item_2_nc);
+        irb.setChecked(false);
+        /*irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
+        irb.setChecked(false);*/
+        itv = (TextView) findViewById(R.id.tv_evid_2);
+        itv.setText("");
+
+
+        itv = (TextView) findViewById(R.id.tvItem_3);
+        itv.setVisibility(View.INVISIBLE);
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_3);
+        irdg.setOnCheckedChangeListener(null);
+        irdg.clearCheck();
+        irdg.setVisibility(View.INVISIBLE);
+        irb = (RadioButton) findViewById(R.id.rd_item_3_c);
+        irb.setChecked(false);
+        irb = (RadioButton) findViewById(R.id.rd_item_3_nc);
+        irb.setChecked(false);
+        /*irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
+        irb.setChecked(false);*/
+        itv = (TextView) findViewById(R.id.tv_evid_3);
+        itv.setText("");
+
+
+        itv = (TextView) findViewById(R.id.tvItem_4);
+        itv.setVisibility(View.INVISIBLE);
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_4);
+        irdg.setOnCheckedChangeListener(null);
+        irdg.clearCheck();
+        irdg.setVisibility(View.INVISIBLE);
+        irb = (RadioButton) findViewById(R.id.rd_item_4_c);
+        irb.setChecked(false);
+        irb = (RadioButton) findViewById(R.id.rd_item_4_nc);
+        irb.setChecked(false);
+        /*irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
+        irb.setChecked(false);*/
+        itv = (TextView) findViewById(R.id.tv_evid_4);
+        itv.setText("");
+
+
+    }
+
+    public void prepgialogobs(final Inspeccion oInsp){
+        TextView itv;
+        RadioGroup irdg;
+        RadioButton irb;
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_0);
+        irdg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton irbch = (RadioButton) findViewById(checkedId);
+                switch(checkedId) {
+                    case R.id.rd_item_0_c:
+                        break;
+                    case R.id.rd_item_0_nc:
+                        //case R.id.rd_item_0_ncp:
+                        if(irbch.isChecked()) {
+                            dialogobs(oInsp, 0);
+                        }
+                        break;
+                }
+            }
+        });
+
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_1);
+        irdg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton irbch = (RadioButton) findViewById(checkedId);
+                switch(checkedId) {
+                    case R.id.rd_item_1_c:
+                        break;
+                    case R.id.rd_item_1_nc:
+                    //case R.id.rd_item_1_ncp:
+                        if(irbch.isChecked()) {
+                            dialogobs(oInsp, 1);
+                        }
+                        break;
+                }
+            }
+        });
+
+
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_2);
+        irdg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton irbch = (RadioButton) findViewById(checkedId);
+                switch(checkedId) {
+                    case R.id.rd_item_2_c:
+                        break;
+                    case R.id.rd_item_2_nc:
+                    //case R.id.rd_item_2_ncp:
+                        if(irbch.isChecked()) {
+                            dialogobs(oInsp, 2);
+                        }
+                        break;
+                }
+            }
+        });
+
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_3);
+        irdg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton irbch = (RadioButton) findViewById(checkedId);
+                switch(checkedId) {
+                    case R.id.rd_item_3_c:
+                        break;
+                    case R.id.rd_item_3_nc:
+                    //case R.id.rd_item_3_ncp:
+                        if(irbch.isChecked()) {
+                            dialogobs(oInsp, 3);
+                        }
+                        break;
+                }
+            }
+        });
+
+        irdg = (RadioGroup) findViewById(R.id.rdg_item_4);
+        irdg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton irbch = (RadioButton) findViewById(checkedId);
+                switch(checkedId) {
+                    case R.id.rd_item_4_c:
+                        break;
+                    case R.id.rd_item_4_nc:
+                    //case R.id.rd_item_4_ncp:
+                        if(irbch.isChecked()) {
+                            dialogobs(oInsp, 4);
+                        }
+                        break;
+                }
+            }
+        });
+
+    }
+
+    public void dialogobs(final Inspeccion oInsp, final int item){
+
+        //final TextView textoBusquedaEsto = (TextView) findViewById(R.id.txtBuscarEsto);
+        final android.support.v7.app.AlertDialog.Builder alert = new android.support.v7.app.AlertDialog.Builder(this);
+
+        alert.setTitle("Observaciones");
+        //alert.setMessage("Observación.");
+
+        // Set an EditText view to get user input
+        final EditText input = new EditText(this);
+        alert.setView(input);
+
+        alert.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Guardamos el valor digitado en una variable o lo mostramos en
+                // un TextViews no se lo que se nos ocurra o lo que necesitemos
+                // hacer.
+                String sobs = input.getText().toString();
+                oInsp.rptasobs[oInsp.iditemsep[item]] = sobs;
+            }
+        });
+
+        alert.setNegativeButton("Cancelar",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        // Canceled.
+                    }
+                });
+
+        alert.show();
+
+    }
+
+    public void cargaitems(Inspeccion oInsp){
+        Log.i("Iusr",""+oInsp.sIdusuario);
+        limpiaform();
+        TextView itv = (TextView) findViewById(R.id.tvItem_0);
+        RadioGroup irdg;
+        RadioButton irb;
+        int j=oInsp.itemini;
+        for(int i=0;i<5;i++){
+            oInsp.iditemsep[i]=-1;
+            int length = (oInsp.itemsfmto != null) ? oInsp.itemsfmto.length:0;
+
+            if (length == 0) {
+                Toast.makeText(this, "No hay elementos para mostrar por el momento", Toast.LENGTH_SHORT).show();
+                this.finish();
+                return;
+            }
+
+            if(j < length) {
+                finform=false;
+                switch (i) {
+                    case 0:
+
+                        /*irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
+                        if(oInsp.valperfmto[j].indexOf("CP")==-1){
+                            irb.setVisibility(View.INVISIBLE);
+                        }else{
+                            irb.setVisibility(View.VISIBLE);
+                        }*/
+
+                        itv = (TextView) findViewById(R.id.tvItem_0);
+                        itv.setVisibility(View.VISIBLE);
+                        irdg = (RadioGroup) findViewById(R.id.rdg_item_0);
+                        irdg.setVisibility(View.VISIBLE);
+
+
+
+                        oInsp.iditemsep[i]=j;
+                        break;
+                    case 1:
+                        /*irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
+                        if(oInsp.valperfmto[j].indexOf("CP")==-1){
+                            irb.setVisibility(View.INVISIBLE);
+                        }else{
+                            irb.setVisibility(View.VISIBLE);
+                        }*/
+                        itv = (TextView) findViewById(R.id.tvItem_1);
+                        itv.setVisibility(View.VISIBLE);
+                        irdg = (RadioGroup) findViewById(R.id.rdg_item_1);
+                        irdg.setVisibility(View.VISIBLE);
+                        oInsp.iditemsep[i]=j;
+                        break;
+                    case 2:
+                        /*irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
+                        if(oInsp.valperfmto[j].indexOf("CP")==-1){
+                            irb.setVisibility(View.INVISIBLE);
+                        }else{
+                            irb.setVisibility(View.VISIBLE);
+                        }*/
+                        itv = (TextView) findViewById(R.id.tvItem_2);
+                        itv.setVisibility(View.VISIBLE);
+                        irdg = (RadioGroup) findViewById(R.id.rdg_item_2);
+                        irdg.setVisibility(View.VISIBLE);
+                        oInsp.iditemsep[i]=j;
+                        break;
+                    case 3:
+                        /*irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
+                        if(oInsp.valperfmto[j].indexOf("CP")==-1){
+                            irb.setVisibility(View.INVISIBLE);
+                        }else{
+                            irb.setVisibility(View.VISIBLE);
+                        }*/
+                        itv = (TextView) findViewById(R.id.tvItem_3);
+                        itv.setVisibility(View.VISIBLE);
+                        irdg = (RadioGroup) findViewById(R.id.rdg_item_3);
+                        irdg.setVisibility(View.VISIBLE);
+                        oInsp.iditemsep[i]=j;
+                        break;
+                    case 4:
+                        /*irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
+                        if(oInsp.valperfmto[j].indexOf("CP")==-1){
+                            irb.setVisibility(View.INVISIBLE);
+                        }else{
+                            irb.setVisibility(View.VISIBLE);
+                        }*/
+                        itv = (TextView) findViewById(R.id.tvItem_4);
+                        itv.setVisibility(View.VISIBLE);
+                        irdg = (RadioGroup) findViewById(R.id.rdg_item_4);
+                        irdg.setVisibility(View.VISIBLE);
+                        oInsp.iditemsep[i]=j;
+                        break;
+                }
+                itv.setText(oInsp.itemsfmto[j]);
+                j++;
+            }else{
+                finform = true;
+            }
+        }
+        prepgialogobs(oInsp);
+    }
+
+    public void guardaitems(Inspeccion oInsp, String sSig){
+
+
+
+        RadioButton irb;
+        TextView tvevid;
+        String stvevid;
+        if(oInsp.iditemsep[0]>-1) {
+            irb = (RadioButton) findViewById(R.id.rd_item_0_c);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[0]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            irb = (RadioButton) findViewById(R.id.rd_item_0_nc);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[0]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            /*irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[0]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }*/
+
+            tvevid = (TextView) findViewById(R.id.tv_evid_0);
+            stvevid = tvevid.getText().toString();
+            if(stvevid.length()>0) {
+                oInsp.rptasevid[oInsp.iditemsep[0]] = stvevid;
+            }
+        }
+        if(oInsp.iditemsep[1]>-1) {
+            irb = (RadioButton) findViewById(R.id.rd_item_1_c);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[1]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            irb = (RadioButton) findViewById(R.id.rd_item_1_nc);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[1]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            /*irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[1]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }*/
+
+            tvevid = (TextView) findViewById(R.id.tv_evid_1);
+            stvevid = tvevid.getText().toString();
+            if(stvevid.length()>0) {
+                oInsp.rptasevid[oInsp.iditemsep[1]] = stvevid;
+            }
+        }
+        if(oInsp.iditemsep[2]>-1) {
+            irb = (RadioButton) findViewById(R.id.rd_item_2_c);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[2]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            irb = (RadioButton) findViewById(R.id.rd_item_2_nc);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[2]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            /*irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[2]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }*/
+            tvevid = (TextView) findViewById(R.id.tv_evid_2);
+            stvevid = tvevid.getText().toString();
+            if(stvevid.length()>0) {
+                oInsp.rptasevid[oInsp.iditemsep[2]] = stvevid;
+            }
+        }
+        if(oInsp.iditemsep[3]>-1) {
+            irb = (RadioButton) findViewById(R.id.rd_item_3_c);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[3]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            irb = (RadioButton) findViewById(R.id.rd_item_3_nc);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[3]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            /*irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[3]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }*/
+            tvevid = (TextView) findViewById(R.id.tv_evid_3);
+            stvevid = tvevid.getText().toString();
+            if(stvevid.length()>0) {
+                oInsp.rptasevid[oInsp.iditemsep[3]] = stvevid;
+            }
+        }
+        if(oInsp.iditemsep[4]>-1) {
+            irb = (RadioButton) findViewById(R.id.rd_item_4_c);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[4]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            irb = (RadioButton) findViewById(R.id.rd_item_4_nc);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[4]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }
+            /*irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
+            if (irb.isChecked()) {
+                oInsp.rptas[oInsp.iditemsep[4]] = irb.getText().toString();
+                irb.clearFocus();
+                irb.setChecked(false);
+            }*/
+            tvevid = (TextView) findViewById(R.id.tv_evid_4);
+            stvevid = tvevid.getText().toString();
+            if(stvevid.length()>0) {
+                oInsp.rptasevid[oInsp.iditemsep[4]] = stvevid;
+            }
+        }
+        if(finform==false || sSig.equals("ATRAS")) {
+            if(sSig.equals("ATRAS")) {
+                if(oInsp.itemini>=5) {
+                    oInsp.itemini = oInsp.itemini - 5;
+                }
+            }else{
+                oInsp.itemini = oInsp.itemini + 5;
+            }
+            limpiaform();
+            cargaitems(oInsp);
+        }else{
+
+            Config oConfig = new Config(getApplicationContext());
+
+            Toast toastprepdat =
+                    Toast.makeText(getApplicationContext(),
+                            "Preparando datos.", Toast.LENGTH_LONG);
+            toastprepdat.setGravity(Gravity.CENTER| Gravity.CENTER,0,0);
+            toastprepdat.show();
+
+            Calendar fecha = new GregorianCalendar();
+            Log.i("Fecha Calendar","Finspecc "+fecha+" --");
+            TextView textv;
+            Sinc oSinc = new Sinc();
+            String sFechafin = String.valueOf(fecha.get(Calendar.YEAR))+"-"+String.valueOf(fecha.get(Calendar.MONTH)+1)+"-"+String.valueOf(fecha.get(Calendar.DAY_OF_MONTH))+" "+String.valueOf(fecha.get(Calendar.HOUR_OF_DAY))+":"+String.valueOf(fecha.get(Calendar.MINUTE));;
+            Log.i("Fecha Fin","Carga para subida "+sFechafin+" --");
+            oSinc.sIdsinc = oInsp.sIdusuario+fecha.getTimeInMillis();
+            oSinc.context = getApplicationContext();
+            //oSinc.urlserv = "http://apl.kawa.com.co/ENCAMINO/inicio.php/pub/reginspecc";
+            //oSinc.urlserv = "http://192.168.54.100/cw/CI/kawa/ap/PENCAMINO/inicio.php/pub/reginspecc";
+            //oSinc.urlserv = "http://192.168.54.101/cw/Indep/pruebaimgandroid/prueba.php";
+            oSinc.urlserv = oConfig.rutasinc+"/inicio.php/pub/reginspecc";
+
+            oSinc.datos.put("idfmto", oInsp.idmftosel);
+            oSinc.datos.put("fdoc",String.valueOf(fecha.get(Calendar.YEAR))+"-"+String.valueOf(fecha.get(Calendar.MONTH)+1)+"-"+String.valueOf(fecha.get(Calendar.DAY_OF_MONTH)));
+            oSinc.datos.put("idempleado", oInsp.sIdusuario);
+            oSinc.datos.put("claseb", oInsp.Vehic.vehicsel.getAttribute("claseb"));
+            oSinc.datos.put("clasea", oInsp.Vehic.vehicsel.getAttribute("clasea"));
+            oSinc.datos.put("ccosto", oInsp.Vehic.vehicsel.getAttribute("id"));
+            textv = (TextView) findViewById(R.id.tvRef2reg);
+            oSinc.datos.put("ref_adic", obsLabel);
+            oSinc.datos.put("ref_adicVal", obs);
+            oSinc.datos.put("ref2", textv.getText().toString());
+            oSinc.datos.put("fdiligini", oInsp.fdiligini);
+            Log.i("fdiligini", oInsp.fdiligini);
+            oSinc.datos.put("fdiligfin", sFechafin);
+            Log.i("fdiligfin", sFechafin);
+
+            oSinc.bSincevid = true;
+
+            oSinc.datosevid = new Hashtable[oInsp.iditemsfmto.length];
+            for(int i=0; i<oInsp.iditemsfmto.length; i++){
+                oSinc.datos.put("detreg_"+oInsp.idmftosel+"_"+oInsp.ideppsfmto[i]+"_resultado", oInsp.rptas[i]);
+                oSinc.datos.put("detreg_"+oInsp.idmftosel+"_"+oInsp.ideppsfmto[i]+"_obs", oInsp.rptasobs[i]);
+                String rutaarch = ifoto.rutafotos+oInsp.rptasevid[i];
+                Hashtable<String, String> oevid = new Hashtable<String, String>();
+                if(oInsp.rptasevid[i].length()>0) {
+                    oevid.put("evidencia", "SI");
+                    oevid.put("nomevidvar", "detreg_"+oInsp.idmftosel+"_"+oInsp.ideppsfmto[i]+"_evidnom");
+                    oevid.put("nomevid", oInsp.rptasevid[i]);
+                    oevid.put("eviddatvar", "detreg_"+oInsp.idmftosel+"_"+oInsp.ideppsfmto[i]+"_eviddat");
+                    oevid.put("rutaevid", rutaarch);
+                    oSinc.bSincevid = true;
+                }else{
+                    oevid.put("evidencia", "NO");
+                }
+                oSinc.datosevid[i] = oevid;
+            }
+            //Log.i("KDATSIN", String.valueOf(oSinc.datosevid));
+            //System.exit(0);
+            try {
+                oSinc.prepDatos();
+                Log.i("Sinc", "Inicio sinc");
+                Toast toastregnov =
+                        Toast.makeText(getApplicationContext(),
+                                "Inspección registrada en espera de sincronización.", Toast.LENGTH_LONG);
+                toastregnov.setGravity(Gravity.CENTER| Gravity.CENTER,0,0);
+                toastregnov.show();
+                Intent imenuprinc = new Intent(getApplicationContext(), Ingreso.class);
+                imenuprinc.putExtra("idusuario",oInsp.sIdusuario);
+                imenuprinc.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(imenuprinc);
+            } catch (Exception e) {
+                Log.e("KERRSinc", "Error sincronizando datos.");
+                e.printStackTrace();
+
+                Toast toastregnov =
+                        Toast.makeText(getApplicationContext(),
+                                "Error preparando sincronización de datps.", Toast.LENGTH_LONG);
+                toastregnov.setGravity(Gravity.CENTER| Gravity.CENTER,0,0);
+                toastregnov.show();
+            }
+
+
+        }
+    }
+}
