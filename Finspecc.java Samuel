@@ -1,5 +1,6 @@
 package cw.kawa;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -37,6 +38,7 @@ public class Finpecc extends AppCompatActivity {
     public TextView tvevid;
     private Inspeccion oFmtoInsp;
     private String obs = "", obsLabel = "";
+    private Button btnContinuar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,21 +69,6 @@ public class Finpecc extends AppCompatActivity {
             Log.i("Fecha Inicio","Valor "+sFechaini+" --");
             String sIdusuario = (String) extras.get("idusuario");
             String svehsel=(String)extras.get("svehsel");//Obtengo el nombre
-            String idform = (String)extras.get("idform"); // Obtengo el nombre de el formato
-            switch (idform){
-                case "INSPECCION BASICA DE SEGURIDAD":
-                    idform = "4";
-                    break;
-                case "PREOPERATIVA DE VEHICULO":
-                    idform = "1";
-                    break;
-                case "EQUIPO DE MANTENIMIENTO":
-                    idform = "5";
-                    break;
-                case "INSPECCION EPP":
-                    idform = "2";
-                    break;
-            }
             String sref2reg= (String) extras.get("sref2reg");//Obtengo la edad
             itvplaca.setText(svehsel);
             oVehic.vehicsel  = oVehic.dom.getElementById(svehsel);
@@ -95,11 +82,11 @@ public class Finpecc extends AppCompatActivity {
             teObs.setText(obsLabel+": "+ aux);
             itvtit.setText("Insp Pre-Operacional "+oVehic.vehicsel.getAttribute("clasea"));
             itvref2reg.setText(sref2reg);
-            oFmtoInsp = new Inspeccion(getApplicationContext(),idform,sIdusuario,sFechaini);
+            oFmtoInsp = new Inspeccion(getApplicationContext(),oVehic.vehicsel.getAttribute("ref4").toString(),sIdusuario,sFechaini);
             oFmtoInsp.Vehic = oVehic;
             finform = false;
             cargaitems(oFmtoInsp);
-            Button btnContinuar = (Button) findViewById(R.id.btEnviar);
+            btnContinuar = (Button) findViewById(R.id.btEnviar);
             btnContinuar.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View arg0) {
                     guardaitems(oFmtoInsp,"SIG");
@@ -390,8 +377,8 @@ public class Finpecc extends AppCompatActivity {
         irb.setChecked(false);
         irb = (RadioButton) findViewById(R.id.rd_item_0_nc);
         irb.setChecked(false);
-        /*irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
-        irb.setChecked(false);*/
+        irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
+        irb.setChecked(false);
         itv = (TextView) findViewById(R.id.tv_evid_0);
         itv.setText("");
 
@@ -406,8 +393,8 @@ public class Finpecc extends AppCompatActivity {
         irb.setChecked(false);
         irb = (RadioButton) findViewById(R.id.rd_item_1_nc);
         irb.setChecked(false);
-        /*irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
-        irb.setChecked(false);*/
+        irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
+        irb.setChecked(false);
         itv = (TextView) findViewById(R.id.tv_evid_1);
         itv.setText("");
 
@@ -422,8 +409,8 @@ public class Finpecc extends AppCompatActivity {
         irb.setChecked(false);
         irb = (RadioButton) findViewById(R.id.rd_item_2_nc);
         irb.setChecked(false);
-        /*irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
-        irb.setChecked(false);*/
+        irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
+        irb.setChecked(false);
         itv = (TextView) findViewById(R.id.tv_evid_2);
         itv.setText("");
 
@@ -438,8 +425,8 @@ public class Finpecc extends AppCompatActivity {
         irb.setChecked(false);
         irb = (RadioButton) findViewById(R.id.rd_item_3_nc);
         irb.setChecked(false);
-        /*irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
-        irb.setChecked(false);*/
+        irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
+        irb.setChecked(false);
         itv = (TextView) findViewById(R.id.tv_evid_3);
         itv.setText("");
 
@@ -454,8 +441,8 @@ public class Finpecc extends AppCompatActivity {
         irb.setChecked(false);
         irb = (RadioButton) findViewById(R.id.rd_item_4_nc);
         irb.setChecked(false);
-        /*irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
-        irb.setChecked(false);*/
+        irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
+        irb.setChecked(false);
         itv = (TextView) findViewById(R.id.tv_evid_4);
         itv.setText("");
 
@@ -474,7 +461,7 @@ public class Finpecc extends AppCompatActivity {
                     case R.id.rd_item_0_c:
                         break;
                     case R.id.rd_item_0_nc:
-                        //case R.id.rd_item_0_ncp:
+                    case R.id.rd_item_0_ncp:
                         if(irbch.isChecked()) {
                             dialogobs(oInsp, 0);
                         }
@@ -491,7 +478,7 @@ public class Finpecc extends AppCompatActivity {
                     case R.id.rd_item_1_c:
                         break;
                     case R.id.rd_item_1_nc:
-                    //case R.id.rd_item_1_ncp:
+                    case R.id.rd_item_1_ncp:
                         if(irbch.isChecked()) {
                             dialogobs(oInsp, 1);
                         }
@@ -509,7 +496,7 @@ public class Finpecc extends AppCompatActivity {
                     case R.id.rd_item_2_c:
                         break;
                     case R.id.rd_item_2_nc:
-                    //case R.id.rd_item_2_ncp:
+                    case R.id.rd_item_2_ncp:
                         if(irbch.isChecked()) {
                             dialogobs(oInsp, 2);
                         }
@@ -526,7 +513,7 @@ public class Finpecc extends AppCompatActivity {
                     case R.id.rd_item_3_c:
                         break;
                     case R.id.rd_item_3_nc:
-                    //case R.id.rd_item_3_ncp:
+                    case R.id.rd_item_3_ncp:
                         if(irbch.isChecked()) {
                             dialogobs(oInsp, 3);
                         }
@@ -543,7 +530,7 @@ public class Finpecc extends AppCompatActivity {
                     case R.id.rd_item_4_c:
                         break;
                     case R.id.rd_item_4_nc:
-                    //case R.id.rd_item_4_ncp:
+                    case R.id.rd_item_4_ncp:
                         if(irbch.isChecked()) {
                             dialogobs(oInsp, 4);
                         }
@@ -609,12 +596,12 @@ public class Finpecc extends AppCompatActivity {
                 switch (i) {
                     case 0:
 
-                        /*irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
+                        irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
                         if(oInsp.valperfmto[j].indexOf("CP")==-1){
                             irb.setVisibility(View.INVISIBLE);
                         }else{
                             irb.setVisibility(View.VISIBLE);
-                        }*/
+                        }
 
                         itv = (TextView) findViewById(R.id.tvItem_0);
                         itv.setVisibility(View.VISIBLE);
@@ -626,12 +613,12 @@ public class Finpecc extends AppCompatActivity {
                         oInsp.iditemsep[i]=j;
                         break;
                     case 1:
-                        /*irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
+                        irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
                         if(oInsp.valperfmto[j].indexOf("CP")==-1){
                             irb.setVisibility(View.INVISIBLE);
                         }else{
                             irb.setVisibility(View.VISIBLE);
-                        }*/
+                        }
                         itv = (TextView) findViewById(R.id.tvItem_1);
                         itv.setVisibility(View.VISIBLE);
                         irdg = (RadioGroup) findViewById(R.id.rdg_item_1);
@@ -639,12 +626,12 @@ public class Finpecc extends AppCompatActivity {
                         oInsp.iditemsep[i]=j;
                         break;
                     case 2:
-                        /*irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
+                        irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
                         if(oInsp.valperfmto[j].indexOf("CP")==-1){
                             irb.setVisibility(View.INVISIBLE);
                         }else{
                             irb.setVisibility(View.VISIBLE);
-                        }*/
+                        }
                         itv = (TextView) findViewById(R.id.tvItem_2);
                         itv.setVisibility(View.VISIBLE);
                         irdg = (RadioGroup) findViewById(R.id.rdg_item_2);
@@ -652,12 +639,12 @@ public class Finpecc extends AppCompatActivity {
                         oInsp.iditemsep[i]=j;
                         break;
                     case 3:
-                        /*irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
+                        irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
                         if(oInsp.valperfmto[j].indexOf("CP")==-1){
                             irb.setVisibility(View.INVISIBLE);
                         }else{
                             irb.setVisibility(View.VISIBLE);
-                        }*/
+                        }
                         itv = (TextView) findViewById(R.id.tvItem_3);
                         itv.setVisibility(View.VISIBLE);
                         irdg = (RadioGroup) findViewById(R.id.rdg_item_3);
@@ -665,12 +652,12 @@ public class Finpecc extends AppCompatActivity {
                         oInsp.iditemsep[i]=j;
                         break;
                     case 4:
-                        /*irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
+                        irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
                         if(oInsp.valperfmto[j].indexOf("CP")==-1){
                             irb.setVisibility(View.INVISIBLE);
                         }else{
                             irb.setVisibility(View.VISIBLE);
-                        }*/
+                        }
                         itv = (TextView) findViewById(R.id.tvItem_4);
                         itv.setVisibility(View.VISIBLE);
                         irdg = (RadioGroup) findViewById(R.id.rdg_item_4);
@@ -707,12 +694,12 @@ public class Finpecc extends AppCompatActivity {
                 irb.clearFocus();
                 irb.setChecked(false);
             }
-            /*irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
+            irb = (RadioButton) findViewById(R.id.rd_item_0_ncp);
             if (irb.isChecked()) {
                 oInsp.rptas[oInsp.iditemsep[0]] = irb.getText().toString();
                 irb.clearFocus();
                 irb.setChecked(false);
-            }*/
+            }
 
             tvevid = (TextView) findViewById(R.id.tv_evid_0);
             stvevid = tvevid.getText().toString();
@@ -733,12 +720,12 @@ public class Finpecc extends AppCompatActivity {
                 irb.clearFocus();
                 irb.setChecked(false);
             }
-            /*irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
+            irb = (RadioButton) findViewById(R.id.rd_item_1_ncp);
             if (irb.isChecked()) {
                 oInsp.rptas[oInsp.iditemsep[1]] = irb.getText().toString();
                 irb.clearFocus();
                 irb.setChecked(false);
-            }*/
+            }
 
             tvevid = (TextView) findViewById(R.id.tv_evid_1);
             stvevid = tvevid.getText().toString();
@@ -759,12 +746,12 @@ public class Finpecc extends AppCompatActivity {
                 irb.clearFocus();
                 irb.setChecked(false);
             }
-            /*irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
+            irb = (RadioButton) findViewById(R.id.rd_item_2_ncp);
             if (irb.isChecked()) {
                 oInsp.rptas[oInsp.iditemsep[2]] = irb.getText().toString();
                 irb.clearFocus();
                 irb.setChecked(false);
-            }*/
+            }
             tvevid = (TextView) findViewById(R.id.tv_evid_2);
             stvevid = tvevid.getText().toString();
             if(stvevid.length()>0) {
@@ -784,12 +771,12 @@ public class Finpecc extends AppCompatActivity {
                 irb.clearFocus();
                 irb.setChecked(false);
             }
-            /*irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
+            irb = (RadioButton) findViewById(R.id.rd_item_3_ncp);
             if (irb.isChecked()) {
                 oInsp.rptas[oInsp.iditemsep[3]] = irb.getText().toString();
                 irb.clearFocus();
                 irb.setChecked(false);
-            }*/
+            }
             tvevid = (TextView) findViewById(R.id.tv_evid_3);
             stvevid = tvevid.getText().toString();
             if(stvevid.length()>0) {
@@ -809,12 +796,12 @@ public class Finpecc extends AppCompatActivity {
                 irb.clearFocus();
                 irb.setChecked(false);
             }
-            /*irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
+            irb = (RadioButton) findViewById(R.id.rd_item_4_ncp);
             if (irb.isChecked()) {
                 oInsp.rptas[oInsp.iditemsep[4]] = irb.getText().toString();
                 irb.clearFocus();
                 irb.setChecked(false);
-            }*/
+            }
             tvevid = (TextView) findViewById(R.id.tv_evid_4);
             stvevid = tvevid.getText().toString();
             if(stvevid.length()>0) {
@@ -832,6 +819,13 @@ public class Finpecc extends AppCompatActivity {
             limpiaform();
             cargaitems(oInsp);
         }else{
+
+            btnContinuar.setEnabled(false);
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setIcon(R.mipmap.ic_launcher);
+            progressDialog.setCancelable(false);
+            progressDialog.setMessage("Cargando...");
+            progressDialog.show();
 
             Config oConfig = new Config(getApplicationContext());
 
@@ -899,6 +893,7 @@ public class Finpecc extends AppCompatActivity {
                                 "Inspección registrada en espera de sincronización.", Toast.LENGTH_LONG);
                 toastregnov.setGravity(Gravity.CENTER| Gravity.CENTER,0,0);
                 toastregnov.show();
+                progressDialog.cancel();
                 Intent imenuprinc = new Intent(getApplicationContext(), Ingreso.class);
                 imenuprinc.putExtra("idusuario",oInsp.sIdusuario);
                 imenuprinc.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
